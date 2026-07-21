@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatFeatureList, formatRupees } from "./insights";
+import { formatDateRange, formatFeatureList, formatRupees } from "./insights";
 
 describe("formatRupees", () => {
   it("formats an annual saving in Indian notation", () => {
@@ -11,5 +11,11 @@ describe("formatRupees", () => {
 describe("formatFeatureList", () => {
   it("lists model inputs without hiding the remaining count", () => {
     expect(formatFeatureList(["LSF", "SM", "AM", "TSR_pct"], 3)).toBe("LSF, SM, AM +1");
+  });
+});
+
+describe("formatDateRange", () => {
+  it("shows a readable workbook data period", () => {
+    expect(formatDateRange("2026-01-01", "2026-02-14")).toBe("01 Jan 2026 – 14 Feb 2026");
   });
 });

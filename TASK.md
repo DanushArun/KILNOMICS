@@ -112,6 +112,9 @@ Checked 2026-07-21/22.
   chronological splitting with a gap is appropriate for time-ordered evidence.
 - [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework): model
   trustworthiness must be managed through design, evaluation, and operation.
+- [ThingsBoard](https://github.com/thingsboard/thingsboard): use its asset,
+  telemetry, rule-state, and alarm-workflow ideas as architecture inspiration;
+  reject its generic SCADA interface and full IoT-platform scope for v1.
 
 **Decision:** build transparent, grey-box decision support rather than a
 black-box optimiser or autonomous controller. Confidence: high for the

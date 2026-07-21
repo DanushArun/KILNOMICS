@@ -14,3 +14,11 @@ export function formatFeatureList(features: string[], limit: number): string {
   const remaining = features.length - visible.length;
   return remaining > 0 ? `${visible.join(", ")} +${remaining}` : visible.join(", ");
 }
+
+export function formatDateRange(startDate: string | null, endDate: string | null): string {
+  if (!startDate || !endDate) return "No usable daily dates";
+  const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric" };
+  const start = new Date(`${startDate}T00:00:00`).toLocaleDateString("en-GB", options);
+  const end = new Date(`${endDate}T00:00:00`).toLocaleDateString("en-GB", options);
+  return `${start} – ${end}`;
+}

@@ -1,6 +1,6 @@
 import { ChangeEvent, useMemo, useState } from "react";
 
-import { formatFeatureList, formatRupees, modelStatus } from "./insights";
+import { formatDateRange, formatFeatureList, formatRupees, modelStatus } from "./insights";
 
 type Report = {
   target: string;
@@ -18,7 +18,21 @@ type Report = {
   };
 };
 
-type TrainingResponse = { source: string; reports: Record<string, Report>; summary: DashboardSummary };
+type SheetStatus = { name: string; row_count: number; status: string };
+
+type DataStatus = {
+  overall_status: string;
+  start_date: string | null;
+  end_date: string | null;
+  sheets: SheetStatus[];
+};
+
+type TrainingResponse = {
+  source: string;
+  reports: Record<string, Report>;
+  summary: DashboardSummary;
+  data_status: DataStatus;
+};
 
 type DashboardSummary = {
   clinker_cost_per_t: number;
@@ -45,6 +59,7 @@ export default function App() {
   const [page, setPage] = useState("Profitability");
   const [reports, setReports] = useState<Record<string, Report>>({});
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [dataStatus, setDataStatus] = useState<DataStatus | null>(null);
   const [status, setStatus] = useState("Synthetic demo — upload a workbook to train");
   const [loading, setLoading] = useState(false);
   const [scm, setScm] = useState(29);
@@ -64,6 +79,7 @@ export default function App() {
       if (!response.ok || !("reports" in result)) throw new Error("detail" in result ? result.detail : "Upload failed");
       setReports(result.reports);
       setSummary(result.summary as DashboardSummary);
+      setDataStatus(result.data_status);
       setStatus(`Trained from ${result.source}. Failing targets are hidden.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Training failed");
@@ -83,7 +99,7 @@ export default function App() {
       {page === "What-if Optimizer" ? <WhatIf scm={scm} setScm={setScm} tsr={tsr} setTsr={setTsr} annual={annual} summary={summary} /> : null}
       {page === "Recommendation Engine" ? <Recommendations reports={reports} annual={annual} summary={summary} /> : null}
       {page === "Model Command Centre" ? <ModelCommand reports={reports} /> : null}
-      {page === "About / Data" ? <DataStatus reports={reports} /> : null}
+      {page === "About / Data" ? <DataStatus reports={reports} dataStatus={dataStatus} /> : null}
       {!['What-if Optimizer', 'Recommendation Engine', 'Model Command Centre', 'About / Data'].includes(page) ? <Overview page={page} reports={reports} summary={summary} /> : null}
     </main>
   </div>;
@@ -120,6 +136,13 @@ function Recommendations({ reports, annual, summary }: { reports: Record<string,
   return <section className="recommendations"><article><h2>Before → after</h2><table><thead><tr><th>Lever</th><th>Before</th><th>After</th><th>Δ</th></tr></thead><tbody><tr><td>SCM share</td><td>29%</td><td>35%</td><td>+6 pp</td></tr><tr><td>Clinker factor</td><td>68%</td><td>62%</td><td>−6 pp</td></tr><tr><td>Fuel / clinker</td><td>₹1,899</td><td>₹1,875</td><td>−₹24</td></tr></tbody></table></article><article><h2>Recommendation status</h2>{canRecommend ? <p className="positive">Firm — {formatRupees(annual)} annual value, subject to operator review.</p> : <p>Hidden until every dependency meets the release gate. Upload the demo workbook to exercise this flow.</p>}</article></section>;
 }
 
-function DataStatus({ reports }: { reports: Record<string, Report> }) {
-  return <section className="data-status"><article><h2>Workbook contract</h2><p>15 original sheets plus CostAssumptions and RawMixDaily. No client data is embedded in the application.</p></article><article><h2>Learned outputs</h2><ul>{Object.values(reports).map((report) => <li key={report.target}>{report.target}: {report.passed ? "eligible for constrained recommendations" : "blocked pending evidence"}</li>)}</ul></article></section>;
+function DataStatus({ reports, dataStatus }: {
+  reports: Record<string, Report>;
+  dataStatus: DataStatus | null;
+}) {
+  return <section className="data-status">
+    <article><h2>Workbook contract</h2><p>15 original sheets plus CostAssumptions and RawMixDaily. No client data is embedded in the application.</p><p>{dataStatus ? `${dataStatus.overall_status} · ${formatDateRange(dataStatus.start_date, dataStatus.end_date)}` : "Upload a workbook to inspect readiness."}</p></article>
+    <article><h2>Learned outputs</h2><ul>{Object.values(reports).map((report) => <li key={report.target}>{report.target}: {report.passed ? "eligible for constrained recommendations" : "blocked pending evidence"}</li>)}</ul></article>
+    {dataStatus ? <article className="wide"><h2>Source-sheet readiness</h2><table><thead><tr><th>Sheet</th><th>Rows</th><th>State</th></tr></thead><tbody>{dataStatus.sheets.map((sheet) => <tr key={sheet.name}><td>{sheet.name}</td><td>{sheet.row_count}</td><td>{sheet.status}</td></tr>)}</tbody></table></article> : null}
+  </section>;
 }
