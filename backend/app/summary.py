@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 
-def workbook_summary(path: Path) -> dict[str, float]:
+def workbook_summary(path: Path) -> dict[str, object]:
     """Calculate current cost and contribution metrics from workbook inputs."""
     sheets = pd.read_excel(path, sheet_name=None)
     recipe = sheets["ProductRecipe"].iloc[0]
@@ -20,7 +20,16 @@ def workbook_summary(path: Path) -> dict[str, float]:
         "scm_pct": float(recipe["scm_pct"]) * 100,
         "monthly_volume_t": float(recipe["monthly_volume_t"]),
         "shc_kcalkg": round(float(sheets["EnergyDaily"]["SHC_kcalkg"].mean()), 2),
+        "shc_series": _shc_series(sheets["EnergyDaily"]),
     }
+
+
+def _shc_series(energy: pd.DataFrame) -> list[dict[str, object]]:
+    daily = energy.groupby("date", as_index=False)["SHC_kcalkg"].mean()
+    return [
+        {"date": pd.Timestamp(row.date).date().isoformat(), "value": round(float(row.SHC_kcalkg), 2)}
+        for row in daily.itertuples(index=False)
+    ]
 
 
 def _clinker_cost(sheets: dict[str, pd.DataFrame], costs: pd.Series) -> float:
