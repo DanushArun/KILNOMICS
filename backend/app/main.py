@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from backend.app.demo import create_demo_workbook
+from backend.app.summary import workbook_summary
 from backend.app.training import train_workbook
 
 
@@ -45,9 +46,10 @@ async def _train_workbook(workbook: UploadFile = File(...)) -> dict[str, object]
         path.write_bytes(await workbook.read())
         try:
             reports = train_workbook(path)
+            summary = workbook_summary(path)
         except (KeyError, ValueError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-    return {"source": workbook.filename, "reports": {name: asdict(report) for name, report in reports.items()}}
+    return {"source": workbook.filename, "summary": summary, "reports": {name: asdict(report) for name, report in reports.items()}}
 
 
 app = create_app()
