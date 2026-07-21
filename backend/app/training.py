@@ -24,6 +24,9 @@ class TargetReport:
     passed: bool
     model_name: str
     interval_radius: float
+    input_features: tuple[str, ...]
+    sample_count: int
+    holdout_count: int
 
 
 TARGETS = {
@@ -66,11 +69,15 @@ def _merge_daily_cement(source: pd.DataFrame, cement: pd.DataFrame) -> pd.DataFr
 def _train_target(source: pd.DataFrame, name: str, config: tuple[str, str, float]) -> TargetReport:
     _, target_column, max_mae = config
     model_source = _daily_average(source) if target_column in {"SHC_kcalkg", "str_28d_MPa"} else source
-    plant_reports = [_train_plant(frame, target_column, max_mae) for _, frame in model_source.groupby("plant_id")]
+    features = _features_for(target_column)
+    plant_reports = [_train_plant(frame, target_column, max_mae, features) for _, frame in model_source.groupby("plant_id")]
     metrics = _aggregate_metrics([item[0] for item in plant_reports])
     model_name = _plurality([item[1] for item in plant_reports])
     interval_radius = float(np.mean([item[2] for item in plant_reports]))
-    return TargetReport(name, metrics, passes_release_gate(metrics, max_mae), model_name, interval_radius)
+    return TargetReport(
+        name, metrics, passes_release_gate(metrics, max_mae), model_name, interval_radius,
+        tuple(features), sum(item[3] for item in plant_reports), sum(item[4] for item in plant_reports),
+    )
 
 
 def _daily_average(source: pd.DataFrame) -> pd.DataFrame:
@@ -78,12 +85,14 @@ def _daily_average(source: pd.DataFrame) -> pd.DataFrame:
     return source.groupby(["plant_id", "date"], as_index=False).mean(numeric_only=True)
 
 
-def _train_plant(frame: pd.DataFrame, target: str, max_mae: float) -> tuple[ModelMetrics, str, float]:
-    features = _features_for(target)
+def _train_plant(
+    frame: pd.DataFrame, target: str, max_mae: float, features: list[str]
+) -> tuple[ModelMetrics, str, float, int, int]:
     data = frame.sort_values(["date", "shift"]).dropna(subset=features + [target])
     x_values = data[features].astype(float).to_numpy()
     y_values = data[target].astype(float).to_numpy()
-    return _evaluate_candidates(x_values, y_values, max_mae)
+    metrics, model_name, radius, holdout_count = _evaluate_candidates(x_values, y_values, max_mae)
+    return metrics, model_name, radius, len(data), holdout_count
 
 
 def _features_for(target: str) -> list[str]:
@@ -95,17 +104,22 @@ def _features_for(target: str) -> list[str]:
     return shared + ["burning_zone_temp_C"]
 
 
-def _evaluate_candidates(x_values: np.ndarray, y_values: np.ndarray, max_mae: float) -> tuple[ModelMetrics, str, float]:
+def _evaluate_candidates(
+    x_values: np.ndarray, y_values: np.ndarray, max_mae: float
+) -> tuple[ModelMetrics, str, float, int]:
     candidates = {
         "Ridge": make_pipeline(StandardScaler(), Ridge(alpha=1.0)),
         "HistGradientBoosting": HistGradientBoostingRegressor(max_iter=120, max_leaf_nodes=8, l2_regularization=1.0, random_state=42),
     }
     results = {name: _evaluate_model(model, x_values, y_values, max_mae) for name, model in candidates.items()}
     name = min(results, key=lambda candidate: results[candidate][0].mae)
-    return results[name][0], name, results[name][1]
+    metrics, radius, holdout_count = results[name]
+    return metrics, name, radius, holdout_count
 
 
-def _evaluate_model(model: object, x_values: np.ndarray, y_values: np.ndarray, max_mae: float) -> tuple[ModelMetrics, float]:
+def _evaluate_model(
+    model: object, x_values: np.ndarray, y_values: np.ndarray, max_mae: float
+) -> tuple[ModelMetrics, float, int]:
     splits = TimeSeriesSplit(n_splits=4, gap=1)
     predictions, actuals, baselines, fold_mae = [], [], [], []
     for train_index, test_index in splits.split(x_values):
@@ -116,7 +130,8 @@ def _evaluate_model(model: object, x_values: np.ndarray, y_values: np.ndarray, m
         actuals.extend(observed)
         baselines.extend([y_values[train_index][-1]] * len(test_index))
         fold_mae.append(mean_absolute_error(observed, predicted))
-    return _metrics(actuals, predictions, baselines, fold_mae, max_mae)
+    metrics, radius = _metrics(actuals, predictions, baselines, fold_mae, max_mae)
+    return metrics, radius, len(actuals)
 
 
 def _metrics(actuals: list[float], predictions: list[float], baselines: list[float], fold_mae: list[float], max_mae: float) -> tuple[ModelMetrics, float]:

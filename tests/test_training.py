@@ -13,3 +13,10 @@ class TrainingTests(unittest.TestCase):
             reports = train_workbook(workbook)
 
         self.assertIn("C3S", reports)
+
+    def test_train_workbook_when_target_is_fitted_exposes_training_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workbook = create_demo_workbook(Path(directory) / "demo.xlsx", days=45)
+            report = train_workbook(workbook)["C3S"]
+
+        self.assertGreater(report.sample_count, 0)
