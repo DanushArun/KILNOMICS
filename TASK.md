@@ -120,6 +120,10 @@ Checked 2026-07-21/22.
   visual, compact decision metrics, and supporting evidence panels—while
   retaining Kami's paper/ink restraint and replacing all investment content
   with workbook-derived cement data.
+- [McKinsey Design System](https://cdn.mckinsey.com/assets/sketch/McK_DS_core_Artboards.pdf):
+  checked 2026-07-22; use Deep Blue, Electric Blue, Cyan, and the published
+  blue data scale as a restrained institutional palette. Use no McKinsey name,
+  logo, or implied endorsement.
 
 **Decision:** build transparent, grey-box decision support rather than a
 black-box optimiser or autonomous controller. Confidence: high for the

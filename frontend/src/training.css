@@ -1,5 +1,5 @@
 .training-progress {
-  border: 1px solid #e1ddd3;
+  border: 1px solid var(--mck-border);
   margin-top: 68px;
   padding: 27px 31px;
 }
@@ -12,26 +12,26 @@
   margin-bottom: 5px;
 }
 .training-progress p:not(.section-label) {
-  color: #706d65;
+  color: var(--mck-muted);
   line-height: 1.5;
   margin: 0;
   max-width: 640px;
 }
 .indeterminate-track {
-  background: #e3dfd5;
+  background: var(--mck-grid);
   height: 9px;
   margin: 25px 0 18px;
   overflow: hidden;
 }
 .indeterminate-track span {
   animation: training-progress 1.5s ease-in-out infinite;
-  background: #168e6a;
+  background: var(--mck-electric-blue);
   display: block;
   height: 100%;
   width: 32%;
 }
 .training-progress ol {
-  color: #706d65;
+  color: var(--mck-muted);
   display: flex;
   font-size: 12px;
   gap: 30px;
