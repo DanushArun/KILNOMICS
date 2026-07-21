@@ -7,7 +7,7 @@ the workbook is not uploaded to a cloud service.
 This guide is written for someone using VS Code and Terminal for the first
 time on a Mac.
 
-## Before you start
+## Babe before you start
 
 You need these installed once:
 
