@@ -8,6 +8,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
+from backend.app.data_quality import inspect_workbook
 from backend.app.demo import create_demo_workbook
 from backend.app.summary import workbook_summary
 from backend.app.training import train_workbook
@@ -47,9 +48,15 @@ async def _train_workbook(workbook: UploadFile = File(...)) -> dict[str, object]
         try:
             reports = train_workbook(path)
             summary = workbook_summary(path)
+            data_status = inspect_workbook(path)
         except (KeyError, ValueError) as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
-    return {"source": workbook.filename, "summary": summary, "reports": {name: asdict(report) for name, report in reports.items()}}
+    return {
+        "source": workbook.filename,
+        "summary": summary,
+        "data_status": asdict(data_status),
+        "reports": {name: asdict(report) for name, report in reports.items()},
+    }
 
 
 app = create_app()
