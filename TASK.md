@@ -115,6 +115,11 @@ Checked 2026-07-21/22.
 - [ThingsBoard](https://github.com/thingsboard/thingsboard): use its asset,
   telemetry, rule-state, and alarm-workflow ideas as architecture inspiration;
   reject its generic SCADA interface and full IoT-platform scope for v1.
+- [Investment Dashboard reference](https://dribbble.com/shots/26654086-Investment-Dashboard-UI-Design):
+  adopt the executive composition—top navigation, a dominant performance
+  visual, compact decision metrics, and supporting evidence panels—while
+  retaining Kami's paper/ink restraint and replacing all investment content
+  with workbook-derived cement data.
 
 **Decision:** build transparent, grey-box decision support rather than a
 black-box optimiser or autonomous controller. Confidence: high for the
