@@ -15,6 +15,7 @@ header { align-items: flex-start; border-bottom: 1px solid #d8d2c4; display: fle
 h1, h2 { color: #1b365d; font-family: Georgia, serif; font-weight: 600; margin: 0; }
 h1 { font-size: 31px; } h2 { font-size: 18px; }
 p { color: #5a6270; line-height: 1.55; } header p { font-size: 14px; margin: 6px 0 0; }
+.run-status { color: #665f52; font-size: 13px; }
 .actions { display: flex; gap: 10px; } .actions a, .actions label { border: 1px solid #1b365d; border-radius: 7px; color: #1b365d; cursor: pointer; padding: 9px 12px; text-decoration: none; }
 .actions label { background: #1b365d; color: #f5f4ed; } .actions input { display: none; }
 .page-grid, .scenario, .recommendations, .data-status, .command-centre { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }

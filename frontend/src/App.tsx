@@ -1,6 +1,8 @@
 import { ChangeEvent, useMemo, useState } from "react";
 
-import { formatDateRange, formatFeatureList, formatRupees, modelStatus } from "./insights";
+import {
+  formatDateRange, formatFeatureList, formatRupees, hasTrainingEvidence, modelStatus,
+} from "./insights";
 
 type Report = {
   target: string;
@@ -76,11 +78,14 @@ export default function App() {
     try {
       const response = await fetch("http://localhost:8000/api/workbooks/train", { method: "POST", body });
       const result = await response.json() as TrainingResponse | { detail: string };
-      if (!response.ok || !("reports" in result)) throw new Error("detail" in result ? result.detail : "Upload failed");
-      setReports(result.reports);
-      setSummary(result.summary as DashboardSummary);
-      setDataStatus(result.data_status);
-      setStatus(`Trained from ${result.source}. Failing targets are hidden.`);
+      if (!response.ok || !hasTrainingEvidence(result)) {
+        throw new Error("API is out of date. Restart the backend, then upload again.");
+      }
+      const training = result as TrainingResponse;
+      setReports(training.reports);
+      setSummary(training.summary);
+      setDataStatus(training.data_status);
+      setStatus(`Trained from ${training.source}. Failing targets are hidden.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Training failed");
     } finally {
@@ -95,7 +100,7 @@ export default function App() {
       <div className="data-note">{status}</div>
     </aside>
     <main>
-      <header><div><h1>{page}</h1><p>Private pilot · all savings require a valid model and hard-constraint check.</p></div><div className="actions"><a href="http://localhost:8000/api/demo-workbook">Download demo XLSX</a><label>Upload Excel<input accept=".xlsx" disabled={loading} onChange={uploadWorkbook} type="file" /></label></div></header>
+      <header><div><h1>{page}</h1><p>Private pilot · all savings require a valid model and hard-constraint check.</p><p className="run-status">{status}</p></div><div className="actions"><a href="http://localhost:8000/api/demo-workbook">Download demo XLSX</a><label>Upload Excel<input accept=".xlsx" disabled={loading} onChange={uploadWorkbook} type="file" /></label></div></header>
       {page === "What-if Optimizer" ? <WhatIf scm={scm} setScm={setScm} tsr={tsr} setTsr={setTsr} annual={annual} summary={summary} /> : null}
       {page === "Recommendation Engine" ? <Recommendations reports={reports} annual={annual} summary={summary} /> : null}
       {page === "Model Command Centre" ? <ModelCommand reports={reports} /> : null}

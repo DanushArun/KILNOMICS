@@ -22,3 +22,9 @@ export function formatDateRange(startDate: string | null, endDate: string | null
   const end = new Date(`${endDate}T00:00:00`).toLocaleDateString("en-GB", options);
   return `${start} – ${end}`;
 }
+
+export function hasTrainingEvidence(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object") return false;
+  const payload = value as Record<string, unknown>;
+  return "reports" in payload && "summary" in payload && "data_status" in payload;
+}
