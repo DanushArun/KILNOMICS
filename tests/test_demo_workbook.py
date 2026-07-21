@@ -13,4 +13,10 @@ class DemoWorkbookTests(unittest.TestCase):
             path = create_demo_workbook(Path(directory) / "demo.xlsx")
             sheet_names = set(pd.ExcelFile(path).sheet_names)
 
-        self.assertTrue({"CostAssumptions", "RawMixDaily"}.issubset(sheet_names))
+        expected = {
+            "README", "PlantMaster", "MaterialSources", "FuelLibrary", "CementConstituents",
+            "KilnConfig", "Targets", "ProductRecipe", "KilnFeedDaily", "FuelDaily",
+            "ClinkerDaily", "CementDaily", "EnergyDaily", "ProcessDaily", "CircLoad",
+            "CostAssumptions", "RawMixDaily",
+        }
+        self.assertSetEqual(sheet_names, expected)

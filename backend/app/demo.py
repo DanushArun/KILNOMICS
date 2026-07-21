@@ -29,6 +29,7 @@ def create_demo_workbook(path: Path, days: int = 180) -> Path:
 def _static_sheets() -> dict[str, pd.DataFrame]:
     plants = [plant[0] for plant in PLANTS]
     return {
+        "README": pd.DataFrame({"KILNOMICS demo workbook": ["Synthetic data only. Replace with plant history before using recommendations."]}),
         "PlantMaster": pd.DataFrame(_plant_rows()),
         "MaterialSources": pd.DataFrame(_material_rows(plants)),
         "FuelLibrary": pd.DataFrame(_fuel_rows(plants)),
@@ -148,12 +149,13 @@ def _process_row(plant: tuple[str, str, int, float], day: int, shift: int, rng: 
 def _split_time_series(rows: list[dict[str, object]]) -> dict[str, pd.DataFrame]:
     frame = pd.DataFrame(rows)
     shared = ["plant_id", "date", "shift"]
+    daily = frame.groupby(["plant_id", "date"], as_index=False).mean(numeric_only=True)
     return {
         "KilnFeedDaily": frame[shared + ["feed_rate_tph", "LSF", "SM", "AM", "CaO", "SiO2", "Al2O3", "Fe2O3", "MgO"]],
         "FuelDaily": _fuel_daily(frame),
         "ClinkerDaily": frame[shared + ["C3S", "C2S", "C3A", "C4AF", "fCaO_mean", "fCaO_SD", "litre_weight_gL", "LSF", "SM", "AM", "MgO"]],
-        "CementDaily": frame[["plant_id", "date", "clinker_factor", "blaine_m2kg", "str_28d_MPa"]].assign(product="PPC", residue_45um_pct=6, str_1d_MPa=16, str_3d_MPa=29, str_7d_MPa=38, setting_init_min=140, setting_final_min=205, soundness_mm=1),
-        "EnergyDaily": frame[["plant_id", "date", "clinker_tonnes", "cement_tonnes", "SHC_kcalkg"]].assign(kWh_crushing=3, kWh_rawgrind=15, kWh_kilnfans=22, kWh_coalmill=4, kWh_cementgrind=34, kWh_utilities=8, WHR_generation_kWh=240_000),
+        "CementDaily": daily[["plant_id", "date", "clinker_factor", "blaine_m2kg", "str_28d_MPa"]].assign(product="PPC", residue_45um_pct=6, str_1d_MPa=16, str_3d_MPa=29, str_7d_MPa=38, setting_init_min=140, setting_final_min=205, soundness_mm=1),
+        "EnergyDaily": daily[["plant_id", "date", "clinker_tonnes", "cement_tonnes", "SHC_kcalkg"]].assign(kWh_crushing=3, kWh_rawgrind=15, kWh_kilnfans=22, kWh_coalmill=4, kWh_cementgrind=34, kWh_utilities=8, WHR_generation_kWh=240_000),
         "ProcessDaily": frame[shared + ["burning_zone_temp_C", "PH_exit_temp_C", "PH_exit_O2_pct", "PH_exit_CO_pct", "secondary_air_temp_C", "false_air_pct", "kiln_torque_pct", "downtime_min", "downtime_cause"]],
         "CircLoad": frame[["plant_id", "date"]].assign(hotmeal_SO3_pct=4.2, hotmeal_Cl_pct=0.45, hotmeal_alkali_Na2Oeq_pct=1.1, bypass_dust_tonnes=12, alkali_sulfur_ratio=1.05),
         "RawMixDaily": _raw_mix_daily(frame),
