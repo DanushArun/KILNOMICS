@@ -1,0 +1,25 @@
+:root { color: #172b45; background: #f5f4ed; font-family: ui-sans-serif, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 1080px; }
+button, input, label, a { font: inherit; }
+.app-shell { display: grid; grid-template-columns: 244px 1fr; min-height: 100vh; }
+.sidebar { background: #ece9df; border-right: 1px solid #d8d2c4; padding: 28px 16px; }
+.wordmark { color: #1b365d; font-family: Georgia, serif; font-size: 21px; font-weight: 700; letter-spacing: .03em; margin: 0 8px 34px; }
+.wordmark span { display: block; color: #6c6b64; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; letter-spacing: .08em; margin-top: 4px; }
+nav { display: grid; gap: 3px; }
+nav button { background: transparent; border: 0; border-radius: 6px; color: #435166; cursor: pointer; padding: 9px 10px; text-align: left; }
+nav button:hover, nav button.active { background: #dfe7ec; color: #1b365d; }
+.data-note { border-top: 1px solid #d8d2c4; color: #665f52; font-size: 12px; line-height: 1.5; margin: 26px 8px 0; padding-top: 16px; }
+main { padding: 34px 42px; max-width: 1500px; }
+header { align-items: flex-start; border-bottom: 1px solid #d8d2c4; display: flex; justify-content: space-between; margin-bottom: 26px; padding-bottom: 22px; }
+h1, h2 { color: #1b365d; font-family: Georgia, serif; font-weight: 600; margin: 0; }
+h1 { font-size: 31px; } h2 { font-size: 18px; }
+p { color: #5a6270; line-height: 1.55; } header p { font-size: 14px; margin: 6px 0 0; }
+.actions { display: flex; gap: 10px; } .actions a, .actions label { border: 1px solid #1b365d; border-radius: 7px; color: #1b365d; cursor: pointer; padding: 9px 12px; text-decoration: none; }
+.actions label { background: #1b365d; color: #f5f4ed; } .actions input { display: none; }
+.page-grid, .scenario, .recommendations, .data-status { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+article { background: #fbfaf5; border: 1px solid #ddd7c8; border-radius: 8px; padding: 20px; } .wide { grid-column: 1 / -1; }
+table { border-collapse: collapse; font-size: 14px; margin-top: 14px; width: 100%; } th { color: #6c6b64; font-size: 11px; font-weight: 600; text-align: left; } td, th { border-bottom: 1px solid #e4dfd4; padding: 10px 8px; }
+label { color: #4a5667; display: grid; gap: 8px; margin-top: 18px; } output { color: #1b365d; font-weight: 700; } input[type="range"] { accent-color: #1b365d; width: 100%; }
+dl { display: grid; gap: 12px; margin: 18px 0 0; } dt { color: #6c6b64; } dd { font-family: Georgia, serif; font-size: 20px; margin: 0; }
+.positive { color: #15734d; font-weight: 700; } ul { color: #5a6270; line-height: 1.8; padding-left: 18px; }
