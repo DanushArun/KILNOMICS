@@ -8,3 +8,9 @@ export function formatRupees(value: number): string {
 export function modelStatus(value: number): string {
   return value >= 0.8 ? "Validated" : "Hidden";
 }
+
+export function formatFeatureList(features: string[], limit: number): string {
+  const visible = features.slice(0, limit);
+  const remaining = features.length - visible.length;
+  return remaining > 0 ? `${visible.join(", ")} +${remaining}` : visible.join(", ");
+}

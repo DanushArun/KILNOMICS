@@ -1,12 +1,21 @@
 import { ChangeEvent, useMemo, useState } from "react";
 
-import { formatRupees, modelStatus } from "./insights";
+import { formatFeatureList, formatRupees, modelStatus } from "./insights";
 
 type Report = {
   target: string;
   passed: boolean;
   model_name: string;
-  metrics: { r_squared: number; mae: number; baseline_improvement_pct: number };
+  input_features: string[];
+  sample_count: number;
+  holdout_count: number;
+  metrics: {
+    r_squared: number;
+    mae: number;
+    baseline_improvement_pct: number;
+    interval_coverage: number;
+    worst_fold_ratio: number;
+  };
 };
 
 type TrainingResponse = { source: string; reports: Record<string, Report>; summary: DashboardSummary };
@@ -24,7 +33,7 @@ type DashboardSummary = {
 const pages = [
   "Profitability", "Compare Plants", "What-if Optimizer", "Recommendation Engine",
   "Correlations", "Raw Materials", "Fuel & TSR", "Clinker Quality", "Energy",
-  "Cement & Margin", "Benchmarks", "About / Data",
+  "Cement & Margin", "Benchmarks", "Model Command Centre", "About / Data",
 ];
 
 const costs = [
@@ -73,8 +82,9 @@ export default function App() {
       <header><div><h1>{page}</h1><p>Private pilot · all savings require a valid model and hard-constraint check.</p></div><div className="actions"><a href="http://localhost:8000/api/demo-workbook">Download demo XLSX</a><label>Upload Excel<input accept=".xlsx" disabled={loading} onChange={uploadWorkbook} type="file" /></label></div></header>
       {page === "What-if Optimizer" ? <WhatIf scm={scm} setScm={setScm} tsr={tsr} setTsr={setTsr} annual={annual} summary={summary} /> : null}
       {page === "Recommendation Engine" ? <Recommendations reports={reports} annual={annual} summary={summary} /> : null}
+      {page === "Model Command Centre" ? <ModelCommand reports={reports} /> : null}
       {page === "About / Data" ? <DataStatus reports={reports} /> : null}
-      {!['What-if Optimizer', 'Recommendation Engine', 'About / Data'].includes(page) ? <Overview page={page} reports={reports} summary={summary} /> : null}
+      {!['What-if Optimizer', 'Recommendation Engine', 'Model Command Centre', 'About / Data'].includes(page) ? <Overview page={page} reports={reports} summary={summary} /> : null}
     </main>
   </div>;
 }
@@ -88,7 +98,16 @@ function Overview({ page, reports, summary }: { page: string; reports: Record<st
       <tr><td>SHC</td><td>{summary ? `${summary.shc_kcalkg.toFixed(0)} kcal/kg` : "Upload workbook"}</td><td>—</td><td>Intensive</td></tr>
       <tr><td>Clinker factor</td><td>{summary ? `${summary.clinker_factor_pct.toFixed(1)}%` : "Upload workbook"}</td><td>—</td><td>Intensive</td></tr>
     </tbody></table></article>
-    <article className="wide"><h2>Model evidence</h2>{rows.length === 0 ? <p>No model run yet. Download the demo workbook or upload a real template-compatible workbook.</p> : <table><thead><tr><th>Target</th><th>Method</th><th>R²</th><th>MAE</th><th>Status</th></tr></thead><tbody>{rows.map((report) => <tr key={report.target}><td>{report.target}</td><td>{report.model_name}</td><td>{report.metrics.r_squared.toFixed(2)}</td><td>{report.metrics.mae.toFixed(2)}</td><td>{report.passed ? modelStatus(report.metrics.r_squared) : "Hidden"}</td></tr>)}</tbody></table>}</article>
+    <article className="wide"><h2>Model evidence</h2>{rows.length === 0 ? <p>No model run yet. Download the demo workbook or upload a real template-compatible workbook.</p> : <table><thead><tr><th>Target</th><th>Method</th><th>R²</th><th>MAE</th><th>Release</th></tr></thead><tbody>{rows.map((report) => <tr key={report.target}><td>{report.target}</td><td>{report.model_name}</td><td>{report.metrics.r_squared.toFixed(2)}</td><td>{report.metrics.mae.toFixed(2)}</td><td>{report.passed ? modelStatus(report.metrics.r_squared) : "Blocked"}</td></tr>)}</tbody></table>}</article>
+  </section>;
+}
+
+function ModelCommand({ reports }: { reports: Record<string, Report> }) {
+  const rows = Object.values(reports);
+  if (rows.length === 0) return <section className="command-centre"><article><h2>No training evidence yet</h2><p>Upload a workbook to create a time-aware model run. Synthetic demo results prove the flow, not plant performance.</p></article></section>;
+  return <section className="command-centre">
+    <article className="wide"><h2>Training evidence</h2><table><thead><tr><th>Target</th><th>Inputs</th><th>Usable rows</th><th>Holdout rows</th><th>Method</th><th>Decision</th></tr></thead><tbody>{rows.map((report) => <tr key={report.target}><td>{report.target}</td><td title={report.input_features.join(", ")}>{formatFeatureList(report.input_features, 3)}</td><td>{report.sample_count}</td><td>{report.holdout_count}</td><td>{report.model_name}</td><td>{report.passed ? "Eligible" : "Blocked"}</td></tr>)}</tbody></table></article>
+    <article className="wide"><h2>Release-gate evidence</h2><table><thead><tr><th>Target</th><th>R²</th><th>MAE</th><th>Baseline improvement</th><th>Interval coverage</th><th>Worst fold / limit</th></tr></thead><tbody>{rows.map((report) => <tr key={report.target}><td>{report.target}</td><td>{report.metrics.r_squared.toFixed(2)}</td><td>{report.metrics.mae.toFixed(2)}</td><td>{report.metrics.baseline_improvement_pct.toFixed(0)}%</td><td>{(report.metrics.interval_coverage * 100).toFixed(0)}%</td><td>{report.metrics.worst_fold_ratio.toFixed(2)}×</td></tr>)}</tbody></table></article>
   </section>;
 }
 
@@ -102,5 +121,5 @@ function Recommendations({ reports, annual, summary }: { reports: Record<string,
 }
 
 function DataStatus({ reports }: { reports: Record<string, Report> }) {
-  return <section className="data-status"><article><h2>Workbook contract</h2><p>15 original sheets plus CostAssumptions and RawMixDaily. No client data is embedded in the application.</p></article><article><h2>Learned outputs</h2><ul>{Object.values(reports).map((report) => <li key={report.target}>{report.target}: {report.passed ? "validated" : "hidden"}</li>)}</ul></article></section>;
+  return <section className="data-status"><article><h2>Workbook contract</h2><p>15 original sheets plus CostAssumptions and RawMixDaily. No client data is embedded in the application.</p></article><article><h2>Learned outputs</h2><ul>{Object.values(reports).map((report) => <li key={report.target}>{report.target}: {report.passed ? "eligible for constrained recommendations" : "blocked pending evidence"}</li>)}</ul></article></section>;
 }
