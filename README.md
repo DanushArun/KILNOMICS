@@ -74,7 +74,7 @@ You only need to do this setup once per project folder, unless you delete the
 
 KILNOMICS needs **two terminals** open at the same time.
 
-### Kempegowda Terminal 1 — backend
+### Terminal 1 — backend
 
 1. In VS Code, click the `+` button in the Terminal panel to open a second
   terminal if you need one.
@@ -94,7 +94,7 @@ Uvicorn running on http://127.0.0.1:8000
 Leave this terminal running. It is the part that reads Excel files and trains
 the models.
 
-### Raipur Somewhere Terminal 2 — Frontend/ dashboard
+### Terminal 2 — dashboard
 
 1. Click the `+` button in the Terminal panel to open another terminal.
 2. Paste these commands one at a time:
@@ -122,19 +122,25 @@ the dashboard.
 2. Click **Upload workbook**.
 3. Select `KILNOMICS_Demo_Data.xlsx` from your Downloads folder.
 4. The dashboard shows an in-progress training rail while it validates data,
-  fits models, and evaluates chronological holdouts.
-5. When training finishes, the Dashboard shows workbook-derived contribution,
-  clinker cost, daily SHC trend, and model-evidence status.
-6. Open **Model evidence** to see model inputs, sample size, holdout size, R²,
-  MAE, and whether each model is eligible for a constrained recommendation.
+  fits soft sensors, and builds the constrained value case. The rail reflects
+  completed backend stages: queued, validation, model fitting, and analysis.
+5. When analysis finishes, **Portfolio** shows the workbook-derived potential
+  value pool, intensive operating position, and highest-value actions.
+6. Open **Compare plants** to review intensive-only SHC gaps. Structural plant
+  differences remain visible and are not presented as savings.
+7. Open **Scenario** to test TSR above the current operating point. The result
+  is bounded by the uploaded kiln capability and calculates ₹/t and annual
+  potential from uploaded fuel prices, heat value, SHC, and production volume.
+8. Open **Evidence & finance** to review model inputs, sample size, holdout
+  performance, release decision, and finance-realised value.
 
 The demo workbook is synthetic. Its results prove the software flow only; they
 are not a claim about a real cement plant or realised savings.
 
 ## Use a real workbook
 
-Use the same upload process for your `.xlsx` workbook. The minimum expected
-sheets are shown in **Data readiness** after upload.
+Use the same upload process for your `.xlsx` workbook. The backend validates
+the required sheets, usable date coverage, and ranges before it trains models.
 
 If a workbook is missing expected sheets or cannot be used for training, do not
 make an operational decision from it. Fix the workbook first, then upload it
@@ -146,7 +152,7 @@ Click the terminal running the backend and press `Control` + `C` once. Then do
 the same in the terminal running the dashboard. This stops the local servers;
 it does not delete your Excel file or project files.
 
-## Start it again tomorrow baby girl
+## Start it again
 
 Open the project in VS Code and repeat only the two commands below in separate
 terminals:
@@ -184,11 +190,18 @@ above. Always include `--reload` while developing.
 ### Upload finishes but no model is eligible
 
 This is an evidence result, not necessarily a software error. Open **Model
-evidence** and **Data readiness** to inspect missing data, holdout performance,
-and failed release gates.
+evidence & finance** to inspect model inputs, holdout performance, and failed
+release gates.
+
+### The upload rail does not appear
+
+Restart both the backend and dashboard after pulling an update. The rail is
+shown only while a workbook analysis is active; it disappears once the result
+is ready.
 
 ## What the dashboard does not do yet
 
 It does not autonomously control a kiln or present model correlations as causal
-proof. A displayed saving becomes actionable only after a constrained scenario,
-plant review, and finance validation.
+proof. Potential, validated, and finance-realised value are separate states. A
+displayed saving becomes actionable only after a constrained scenario, plant
+review, and finance validation.
