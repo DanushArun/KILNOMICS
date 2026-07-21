@@ -66,3 +66,9 @@ export function buildLinePath(
     })
     .join(" ");
 }
+
+export function trainingProgressMessage(isTraining: boolean): string {
+  return isTraining
+    ? "Validating data, fitting soft sensors, and evaluating holdouts."
+    : "No model run in progress.";
+}

@@ -6,6 +6,7 @@ import {
   formatDateRange,
   formatFeatureList,
   formatRupees,
+  trainingProgressMessage,
 } from "./insights";
 
 describe("formatRupees", () => {
@@ -41,5 +42,11 @@ describe("hasTrainingEvidence", () => {
 describe("buildLinePath", () => {
   it("maps a two-point metric series to the chart bounds", () => {
     expect(buildLinePath([100, 110], 100, 50)).toBe("M 0 50 L 100 0");
+  });
+});
+
+describe("trainingProgressMessage", () => {
+  it("states the actual in-flight training work without inventing a percentage", () => {
+    expect(trainingProgressMessage(true)).toContain("Validating data");
   });
 });

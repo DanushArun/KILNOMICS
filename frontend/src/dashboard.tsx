@@ -1,16 +1,31 @@
-import { buildLinePath, formatDateRange, formatRupees } from "./insights";
+import {
+  buildLinePath,
+  formatDateRange,
+  formatRupees,
+  trainingProgressMessage,
+} from "./insights";
 import { DashboardSummary, DataStatus, Point, Report } from "./types";
+import "./training.css";
 
 export function ExecutiveDashboard({
   dataStatus,
+  loading,
   reports,
   summary,
 }: {
   dataStatus: DataStatus | null;
+  loading: boolean;
   reports: Record<string, Report>;
   summary: DashboardSummary | null;
 }) {
-  if (!summary) return <AwaitingWorkbook />;
+  if (!summary) {
+    return (
+      <>
+        {<AwaitingWorkbook />}
+        {loading ? <TrainingProgress /> : null}
+      </>
+    );
+  }
   const eligible = Object.values(reports).filter(
     (report) => report.passed,
   ).length;
@@ -26,6 +41,31 @@ export function ExecutiveDashboard({
         <EconomicsPanel summary={summary} />
         <DecisionPanel dataStatus={dataStatus} eligible={eligible} />
       </section>
+    </section>
+  );
+}
+
+function TrainingProgress() {
+  return (
+    <section aria-live="polite" className="training-progress" role="status">
+      <div>
+        <p className="section-label">Training run in progress</p>
+        <h2>Building the evidence pack</h2>
+        <p>
+          {trainingProgressMessage(true)} This is intentionally not a
+          percentage: the current API returns the result only when the run
+          completes.
+        </p>
+      </div>
+      <div className="indeterminate-track">
+        <span />
+      </div>
+      <ol>
+        <li>Validate workbook</li>
+        <li>Fit time-aware models</li>
+        <li>Evaluate holdouts</li>
+        <li>Release or block each target</li>
+      </ol>
     </section>
   );
 }

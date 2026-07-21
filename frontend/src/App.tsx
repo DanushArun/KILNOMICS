@@ -77,6 +77,7 @@ export default function App() {
       <Content
         annual={annual}
         dataStatus={dataStatus}
+        loading={loading}
         reports={reports}
         scm={scm}
         setScm={setScm}
@@ -178,6 +179,7 @@ function Masthead({
 function Content({
   annual,
   dataStatus,
+  loading,
   reports,
   scm,
   setScm,
@@ -188,6 +190,7 @@ function Content({
 }: {
   annual: number;
   dataStatus: DataStatus | null;
+  loading: boolean;
   reports: Record<string, Report>;
   scm: number;
   setScm: (value: number) => void;
@@ -213,6 +216,7 @@ function Content({
   return (
     <ExecutiveDashboard
       dataStatus={dataStatus}
+      loading={loading}
       reports={reports}
       summary={summary}
     />
