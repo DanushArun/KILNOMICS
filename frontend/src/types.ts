@@ -38,11 +38,86 @@ export type DashboardSummary = {
   shc_series: Point[];
 };
 
+export type Plant = {
+  plant_id: string;
+  plant_name: string;
+  rated_clinker_tpd: number;
+  structure: string;
+  clinker_cost_per_t: number;
+  cement_cost_per_t: number;
+  contribution_per_t: number;
+  monthly_volume_t: number;
+  shc_kcalkg: number;
+  tsr_pct: number;
+  clinker_factor_pct: number;
+  false_air_pct: number;
+  limits: { tsr_max_pct: number; scm_min_pct: number; scm_max_pct: number };
+};
+
+export type Opportunity = {
+  id: string;
+  plant_id: string;
+  plant_name: string;
+  lever: string;
+  metric: string;
+  baseline: number;
+  target: number;
+  savings_per_t: number;
+  annual_savings_rs: number;
+  confidence: string;
+  state: string;
+};
+
+export type Benchmark = {
+  plant_id: string;
+  metric: string;
+  value: number;
+  gap_to_best: number;
+};
+
+export type ScenarioConstraint = {
+  name: string;
+  state: "pass" | "blocked";
+  message: string;
+};
+
+export type ScenarioResult = {
+  feasible: boolean;
+  annual_savings_rs: number;
+  savings_per_t: number;
+  constraints: ScenarioConstraint[];
+};
+
+export type Portfolio = {
+  annual_savings_rs: number;
+  practical_annual_savings_rs: number;
+  opportunity_count: number;
+};
+
+export type Provenance = { mode: string; label: string; disclaimer: string };
+
+export type FinanceStatus = { state: string; realised_annual_rs: number };
+
 export type TrainingResponse = {
   source: string;
   reports: Record<string, Report>;
   summary: DashboardSummary;
   data_status: DataStatus;
+  analysis_id: string;
+  portfolio: Portfolio;
+  plants: Plant[];
+  benchmarks: Benchmark[];
+  opportunities: Opportunity[];
+  provenance: Provenance;
+  finance_status: FinanceStatus;
 };
 
-export type View = "dashboard" | "models" | "scenario" | "data";
+export type TrainingRun = {
+  run_id: string;
+  phase: "queued" | "validating" | "training" | "analysing" | "complete" | "failed";
+  progress_pct: number;
+  result: TrainingResponse | null;
+  error: string | null;
+};
+
+export type View = "portfolio" | "compare" | "actions" | "scenario" | "evidence";

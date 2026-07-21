@@ -23,8 +23,7 @@ python3 --version
 node --version
 ```
 
-Each command should print a version number. If either command says `command
-not found`, install that tool before continuing.
+Each command should print a version number. If either command says `command not found`, install that tool before continuing.
 
 ## Open the project in VS Code
 
@@ -40,6 +39,8 @@ ends in `pusu-pusu`. If it does not, paste this command and press Enter:
 ```bash
 cd /Users/danusharun/Downloads/pusu-pusu
 ```
+
+
 
 ## First-time setup
 
@@ -73,10 +74,10 @@ You only need to do this setup once per project folder, unless you delete the
 
 KILNOMICS needs **two terminals** open at the same time.
 
-### Terminal 1 — backend
+### Kempegowda Terminal 1 — backend
 
 1. In VS Code, click the `+` button in the Terminal panel to open a second
-   terminal if you need one.
+  terminal if you need one.
 2. In the first terminal, make sure you are in the `pusu-pusu` folder.
 3. Paste this command and press Enter:
 
@@ -93,7 +94,7 @@ Uvicorn running on http://127.0.0.1:8000
 Leave this terminal running. It is the part that reads Excel files and trains
 the models.
 
-### Terminal 2 — dashboard
+### Raipur Somewhere Terminal 2 — Frontend/ dashboard
 
 1. Click the `+` button in the Terminal panel to open another terminal.
 2. Paste these commands one at a time:
@@ -121,11 +122,11 @@ the dashboard.
 2. Click **Upload workbook**.
 3. Select `KILNOMICS_Demo_Data.xlsx` from your Downloads folder.
 4. The dashboard shows an in-progress training rail while it validates data,
-   fits models, and evaluates chronological holdouts.
+  fits models, and evaluates chronological holdouts.
 5. When training finishes, the Dashboard shows workbook-derived contribution,
-   clinker cost, daily SHC trend, and model-evidence status.
+  clinker cost, daily SHC trend, and model-evidence status.
 6. Open **Model evidence** to see model inputs, sample size, holdout size, R²,
-   MAE, and whether each model is eligible for a constrained recommendation.
+  MAE, and whether each model is eligible for a constrained recommendation.
 
 The demo workbook is synthetic. Its results prove the software flow only; they
 are not a claim about a real cement plant or realised savings.
@@ -145,7 +146,7 @@ Click the terminal running the backend and press `Control` + `C` once. Then do
 the same in the terminal running the dashboard. This stops the local servers;
 it does not delete your Excel file or project files.
 
-## Start it again tomorrow
+## Start it again tomorrow baby girl
 
 Open the project in VS Code and repeat only the two commands below in separate
 terminals:
@@ -158,7 +159,11 @@ terminals:
 cd frontend && npm run dev
 ```
 
+
+
 ## Common issues
+
+
 
 ### `address already in use`
 

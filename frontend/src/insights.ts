@@ -48,6 +48,19 @@ export function hasTrainingEvidence(
   );
 }
 
+export function hasPortfolioAnalysis(value: unknown): value is Record<string, unknown> {
+  if (!hasTrainingEvidence(value)) return false;
+  const payload = value as Record<string, unknown>;
+  return (
+    "analysis_id" in payload &&
+    "portfolio" in payload &&
+    "plants" in payload &&
+    "opportunities" in payload &&
+    "provenance" in payload &&
+    "finance_status" in payload
+  );
+}
+
 export function buildLinePath(
   values: number[],
   width: number,
@@ -71,4 +84,30 @@ export function trainingProgressMessage(isTraining: boolean): string {
   return isTraining
     ? "Validating data, fitting soft sensors, and evaluating holdouts."
     : "No model run in progress.";
+}
+
+export function shouldShowTrainingProgress(
+  hasAnalysis: boolean,
+  isTraining: boolean,
+): boolean {
+  return !hasAnalysis && isTraining;
+}
+
+export function suggestedTsrTarget(current: number, maximum: number): number {
+  return Math.min(current + 3, maximum);
+}
+
+type CostedOpportunity = { lever: string; annual_savings_rs: number };
+
+export function valuePoolByLever(
+  opportunities: CostedOpportunity[],
+): { label: string; value: number }[] {
+  const values = new Map<string, number>();
+  opportunities.forEach((opportunity) => {
+    const value = values.get(opportunity.lever) ?? 0;
+    values.set(opportunity.lever, value + opportunity.annual_savings_rs);
+  });
+  return [...values.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((left, right) => right.value - left.value);
 }

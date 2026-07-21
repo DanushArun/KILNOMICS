@@ -8,10 +8,12 @@ import pandas as pd
 
 
 PLANTS = (
-    ("DEMO_SIROHI", "Demo Sirohi", 11_500, 0.0),
-    ("DEMO_DURG", "Demo Durg", 8_000, 8.0),
-    ("DEMO_UDAIPUR", "Demo Udaipur", 6_500, 15.0),
+    ("DEMO_ASTER", "Aster Works", 11_500, -3.0),
+    ("DEMO_BEACON", "Beacon Works", 8_000, 17.0),
+    ("DEMO_CREST", "Crest Works", 6_500, 51.0),
 )
+
+TSR_LIMITS = {"DEMO_ASTER": 18, "DEMO_BEACON": 16, "DEMO_CREST": 12}
 
 
 def create_demo_workbook(path: Path, days: int = 180) -> Path:
@@ -113,7 +115,7 @@ def _constituent_rows(plants: list[str]) -> list[dict[str, object]]:
 
 
 def _kiln_rows() -> list[dict[str, object]]:
-    return [{"plant_id": plant_id, "clinkerTPD": capacity, "dustLoss": 0.02, "freeLime": 1.2, "bypassAvailable": False, "tsrMaxPct": 16, "mainBurnerMinPct": 40} for plant_id, _, capacity, _ in PLANTS]
+    return [{"plant_id": plant_id, "clinkerTPD": capacity, "dustLoss": 0.02, "freeLime": 1.2, "bypassAvailable": False, "tsrMaxPct": TSR_LIMITS[plant_id], "mainBurnerMinPct": 40} for plant_id, _, capacity, _ in PLANTS]
 
 
 def _target_rows(plants: list[str]) -> list[dict[str, object]]:

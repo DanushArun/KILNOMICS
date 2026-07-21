@@ -1,256 +1,123 @@
-import {
-  buildLinePath,
-  formatDateRange,
-  formatRupees,
-  trainingProgressMessage,
-} from "./insights";
-import { DashboardSummary, DataStatus, Point, Report } from "./types";
-import "./training.css";
+import { formatRupees, valuePoolByLever } from "./insights";
+import { Opportunity, TrainingResponse, TrainingRun } from "./types";
 
-export function ExecutiveDashboard({
-  dataStatus,
-  loading,
-  reports,
-  summary,
-}: {
-  dataStatus: DataStatus | null;
-  loading: boolean;
-  reports: Record<string, Report>;
-  summary: DashboardSummary | null;
-}) {
-  if (!summary) {
-    return (
-      <>
-        {<AwaitingWorkbook />}
-        {loading ? <TrainingProgress /> : null}
-      </>
-    );
-  }
-  const eligible = Object.values(reports).filter(
-    (report) => report.passed,
-  ).length;
+export function PortfolioDashboard({ analysis }: { analysis: TrainingResponse }) {
+  const topActions = [...analysis.opportunities]
+    .sort((left, right) => right.annual_savings_rs - left.annual_savings_rs)
+    .slice(0, 3);
   return (
-    <section className="dashboard">
-      <DashboardHeading />
-      <MetricRow summary={summary} />
-      <section className="feature-grid">
-        <PerformancePanel series={summary.shc_series} />
-        <EvidencePanel eligible={eligible} reports={reports} />
+    <section className="portfolio-view">
+      <header className="page-header">
+        <div>
+          <h1>Portfolio opportunity</h1>
+          <p>{analysis.provenance.disclaimer}</p>
+        </div>
+        <span className="source-state">{analysis.provenance.label}</span>
+      </header>
+      <section className="value-summary" aria-label="Illustrative value summary">
+        <div>
+          <span>Illustrative annual opportunity</span>
+          <strong>{formatRupees(analysis.portfolio.annual_savings_rs)}</strong>
+          <p>
+            Practical capture case {formatRupees(analysis.portfolio.practical_annual_savings_rs)}
+          </p>
+        </div>
+        <dl>
+          <ValueRow label="Plants" value={String(analysis.plants.length)} />
+          <ValueRow label="Actions" value={String(analysis.portfolio.opportunity_count)} />
+          <ValueRow label="Finance-realised" value={formatRupees(analysis.finance_status.realised_annual_rs)} />
+        </dl>
       </section>
-      <section className="lower-grid">
-        <EconomicsPanel summary={summary} />
-        <DecisionPanel dataStatus={dataStatus} eligible={eligible} />
+      <section className="content-grid">
+        <article className="table-section">
+          <h2>Costed value pool</h2>
+          <ValuePoolChart opportunities={analysis.opportunities} />
+        </article>
+        <article className="action-section">
+          <h2>Required decisions</h2>
+          <ol className="action-list">
+            {topActions.map((action) => <ActionRow action={action} key={action.id} />)}
+          </ol>
+        </article>
+      </section>
+      <section className="table-section portfolio-position">
+        <h2>Intensive operating position</h2>
+        <PlantTable analysis={analysis} />
       </section>
     </section>
   );
 }
 
-function TrainingProgress() {
+function ValueRow({ label, value }: { label: string; value: string }) {
+  return <div><dt>{label}</dt><dd>{value}</dd></div>;
+}
+
+export function PlantTable({ analysis }: { analysis: TrainingResponse }) {
   return (
-    <section aria-live="polite" className="training-progress" role="status">
-      <div>
-        <p className="section-label">Training run in progress</p>
-        <h2>Building the evidence pack</h2>
-        <p>
-          {trainingProgressMessage(true)} This is intentionally not a
-          percentage: the current API returns the result only when the run
-          completes.
-        </p>
-      </div>
-      <div className="indeterminate-track">
-        <span />
-      </div>
-      <ol>
-        <li>Validate workbook</li>
-        <li>Fit time-aware models</li>
-        <li>Evaluate holdouts</li>
-        <li>Release or block each target</li>
-      </ol>
-    </section>
+    <table>
+      <thead><tr><th>Plant</th><th>Structure</th><th>Cement cost</th><th>SHC</th><th>TSR</th><th>Clinker factor</th></tr></thead>
+      <tbody>
+        {analysis.plants.map((plant) => (
+          <tr key={plant.plant_id}>
+            <td><strong>{plant.plant_name}</strong><br /><span>{plant.rated_clinker_tpd.toLocaleString("en-IN")} tpd</span></td>
+            <td>{plant.structure}</td>
+            <td>{formatRupees(plant.cement_cost_per_t)} / t</td>
+            <td>{plant.shc_kcalkg.toFixed(0)} kcal/kg</td>
+            <td>{plant.tsr_pct.toFixed(1)}%</td>
+            <td>{plant.clinker_factor_pct.toFixed(1)}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
-function DashboardHeading() {
+export function ActionRow({ action }: { action: Opportunity }) {
   return (
-    <section className="dashboard-heading">
-      <div>
-        <p className="section-label">Executive decision support</p>
-        <h1>Clinker-to-cement value view</h1>
-      </div>
-      <p>
-        Every number is derived from the uploaded workbook. Savings remain
-        unavailable until a constrained scenario is solved.
-      </p>
-    </section>
+    <li>
+      <div><strong>{action.lever}</strong><span>{action.plant_name}</span></div>
+      <div><strong>{formatRupees(action.annual_savings_rs)}</strong><span>{formatRupees(action.savings_per_t)} / t</span></div>
+    </li>
   );
 }
 
-function MetricRow({ summary }: { summary: DashboardSummary }) {
-  return (
-    <section className="metric-row">
-      <Metric
-        label="Contribution margin"
-        value={`${formatRupees(summary.contribution_per_t)} / t`}
-      />
-      <Metric
-        label="Clinker cost"
-        value={`${formatRupees(summary.clinker_cost_per_t)} / t`}
-      />
-      <Metric
-        label="Specific heat consumption"
-        value={`${summary.shc_kcalkg.toFixed(0)} kcal/kg`}
-      />
-    </section>
-  );
-}
-
-function AwaitingWorkbook() {
+export function AwaitingWorkbook() {
   return (
     <section className="awaiting-workbook">
-      <p className="section-label">Private local pilot</p>
-      <h1>Upload the plant workbook to create the decision view.</h1>
-      <p>
-        The dashboard will then show source readiness, model performance, daily
-        SHC behaviour, and the economics needed for a constrained scenario.
-      </p>
-      <ol>
-        <li>Download the template or open the supplied demo workbook.</li>
-        <li>Upload a valid `.xlsx` file.</li>
-        <li>Review the evidence before considering an operating action.</li>
-      </ol>
+      <h1>Upload a plant workbook</h1>
+      <p>Use the demo workbook for the fictional three-plant value case, or upload a client workbook for unverified analysis.</p>
     </section>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+export function TrainingProgress({ run }: { run: TrainingRun }) {
+  const label = progressLabel(run.phase);
   return (
-    <article className="metric">
-      <p>{label}</p>
-      <strong>{value}</strong>
-    </article>
+    <section className="training-progress" aria-live="polite">
+      <div><h2>{label}</h2><p>Analysis status updates as each validation and model-evidence stage completes.</p></div>
+      <strong>{run.progress_pct}%</strong>
+      <div className="progress-track" role="progressbar" aria-valuemax={100}
+        aria-valuemin={0} aria-valuenow={run.progress_pct}><span style={{ width: `${run.progress_pct}%` }} /></div>
+      <ol><li className={stageState(run, "validating")}>Validate workbook</li><li className={stageState(run, "training")}>Fit soft sensors</li><li className={stageState(run, "analysing")}>Build value case</li></ol>
+    </section>
   );
 }
 
-function PerformancePanel({ series }: { series: Point[] }) {
-  const values = series.map((point) => point.value);
-  const path = buildLinePath(values, 620, 180);
-  const first = series[0]?.date;
-  const last = series.at(-1)?.date;
-  return (
-    <article className="panel performance">
-      <div className="panel-heading">
-        <div>
-          <h2>Specific heat consumption</h2>
-          <p>{formatDateRange(first ?? null, last ?? null)} · daily average</p>
-        </div>
-        <strong>
-          {Math.min(...values).toFixed(0)}–{Math.max(...values).toFixed(0)}{" "}
-          kcal/kg
-        </strong>
-      </div>
-      <svg
-        aria-label="Daily specific heat consumption"
-        role="img"
-        viewBox="0 0 620 180"
-      >
-        <path
-          className="gridline"
-          d="M 0 45 H 620 M 0 90 H 620 M 0 135 H 620"
-        />
-        <path className="trend" d={path} />
-      </svg>
-      <div className="chart-labels">
-        <span>{first}</span>
-        <span>{last}</span>
-      </div>
-    </article>
-  );
+function ValuePoolChart({ opportunities }: { opportunities: Opportunity[] }) {
+  const values = valuePoolByLever(opportunities);
+  const maximum = values[0]?.value ?? 1;
+  return <div className="value-pool">{values.map((item) => <div className="pool-row" key={item.label}><span>{item.label}</span><div className="pool-bar"><i style={{ width: `${(item.value / maximum) * 100}%` }} /></div><strong>{formatRupees(item.value)}</strong></div>)}</div>;
 }
 
-function EvidencePanel({
-  eligible,
-  reports,
-}: {
-  eligible: number;
-  reports: Record<string, Report>;
-}) {
-  const rows = Object.values(reports);
-  return (
-    <article className="panel evidence">
-      <div className="panel-heading">
-        <div>
-          <h2>Model evidence</h2>
-          <p>Chronological holdout gate</p>
-        </div>
-        <strong>
-          {eligible}/{rows.length || 4}
-        </strong>
-      </div>
-      {rows.length === 0 ? (
-        <p>No model run available.</p>
-      ) : (
-        <ul className="model-list">
-          {rows.map((report) => (
-            <li key={report.target}>
-              <span>{report.target}</span>
-              <span>R² {report.metrics.r_squared.toFixed(2)}</span>
-              <b className={report.passed ? "pass" : "block"}>
-                {report.passed ? "Eligible" : "Blocked"}
-              </b>
-            </li>
-          ))}
-        </ul>
-      )}
-      <button className="text-button">Open model evidence →</button>
-    </article>
-  );
+function progressLabel(phase: TrainingRun["phase"]): string {
+  const labels: Record<TrainingRun["phase"], string> = {
+    queued: "Workbook queued", validating: "Validating source data", training: "Fitting soft sensors",
+    analysing: "Calculating constrained value", complete: "Analysis complete", failed: "Analysis failed",
+  };
+  return labels[phase];
 }
 
-function EconomicsPanel({ summary }: { summary: DashboardSummary }) {
-  return (
-    <article className="panel economics">
-      <h2>Economics at current recipe</h2>
-      <dl>
-        <div>
-          <dt>Cement cost</dt>
-          <dd>{formatRupees(summary.cement_cost_per_t)} / t</dd>
-        </div>
-        <div>
-          <dt>Clinker factor</dt>
-          <dd>{summary.clinker_factor_pct.toFixed(1)}%</dd>
-        </div>
-        <div>
-          <dt>SCM share</dt>
-          <dd>{summary.scm_pct.toFixed(1)}%</dd>
-        </div>
-      </dl>
-      <p>
-        Cost and margin values are workbook-derived; they are not benchmark
-        claims.
-      </p>
-    </article>
-  );
-}
-
-function DecisionPanel({
-  dataStatus,
-  eligible,
-}: {
-  dataStatus: DataStatus | null;
-  eligible: number;
-}) {
-  return (
-    <article className="panel decision">
-      <h2>Decision gate</h2>
-      <strong>
-        {dataStatus?.overall_status === "ready" ? "Data ready" : "Data pending"}
-      </strong>
-      <p>
-        {eligible} model{eligible === 1 ? "" : "s"} pass the evidence gate. The
-        system still requires hard chemistry, quality, and capability checks
-        before showing a saving.
-      </p>
-      <button className="text-button">Review readiness →</button>
-    </article>
-  );
+function stageState(run: TrainingRun, phase: TrainingRun["phase"]): string {
+  const order = ["queued", "validating", "training", "analysing", "complete"];
+  return order.indexOf(run.phase) >= order.indexOf(phase) ? "complete" : "pending";
 }
