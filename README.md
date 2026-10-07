@@ -1,8 +1,66 @@
+![KILNOMICS workflow](docs/assets/project-overview.svg)
+
 # KILNOMICS
+
+**Trace the value case from workbook to evidence to constrained scenario.**
 
 A local clinker-to-cement analysis dashboard that turns an Excel workbook into cost,
 quality, energy and model-evidence views. It separates potential value from validated
 and finance-realised savings.
+
+
+![FastAPI](https://img.shields.io/badge/FastAPI-181f28)
+![React](https://img.shields.io/badge/React-181f28)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-181f28)
+
+[Architecture](docs/ARCHITECTURE.md) · [Evaluation guide](docs/EVALUATION.md)
+
+**Contents:** [The challenge](#the-challenge) · [Walkthrough](#walk-through-the-project) ·
+[Implementation](#implementation-state) · [Design choices](#engineering-choices) ·
+[Next evidence](#next-evidence-to-collect)
+
+---
+
+## The challenge
+
+Cement operating comparisons can confuse plant size with efficiency and potential savings with
+realised value. KILNOMICS keeps workbook inputs, intensive metrics, model evidence and constrained
+scenarios visible so a value case can be reviewed before an operational decision.
+
+## System at a glance
+
+```mermaid
+flowchart LR
+    N0["Workbook validation"]
+    N1["Soft-sensor training"]
+    N2["Evidence gates"]
+    N3["Constrained value case"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+```
+
+## Walk through the project
+
+### 1. Load the workbook
+
+Use the synthetic demo first. The API validates workbook structure and usable data before fitting
+or analysis.
+
+### 2. Watch the stages
+
+The background run exposes validation, training and analysis progress. A progress rail is tied to
+backend stages, not a simulated loading story.
+
+### 3. Inspect model evidence
+
+Read sample size, input coverage, holdout results and release gates. A model that fails a gate
+remains ineligible rather than becoming a recommendation by default.
+
+### 4. Evaluate a scenario
+
+Compare a TSR change against uploaded plant capability and fuel/cost inputs. Keep potential,
+validated and finance-realised value as separate states.
 
 ## What the pilot does
 
@@ -87,3 +145,32 @@ for this README update. There is no claim of a new measured pass count.
 Analyses are held in process memory and expire on restart, so re-upload before scenario work.
 The pilot does not control a kiln. A potential saving needs constrained analysis, plant review
 and finance validation before it can be recorded as realised value.
+
+## Engineering choices
+
+**Intensive comparisons.** Cross-plant comparisons avoid treating absolute scale as an efficiency
+gap.
+
+**Model eligibility is explicit.** Holdout evidence and gates stay visible to the reviewer.
+
+**Value has distinct states.** A modeled opportunity does not become a finance-realised saving
+automatically.
+
+## Implementation state
+
+| State | Current evidence |
+| --- | --- |
+| Present | Local workbook validation, training and analysis |
+| Present | Intensive comparisons and constrained scenario source |
+| Present | Synthetic workbook and behavioral test sources |
+| Not validated | Real plant savings or autonomous kiln control |
+
+The [architecture guide](docs/ARCHITECTURE.md) maps these statements to source entry points.
+The [evaluation guide](docs/EVALUATION.md) separates inspection, executable checks and
+domain validation, with the next evidence needed for each project.
+
+## Next evidence to collect
+
+- Record a clean synthetic workbook evaluation.
+- Validate domain assumptions with authorized plant evidence.
+- Reconcile finance-realised values independently of model potential.
