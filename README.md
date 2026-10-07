@@ -1,207 +1,89 @@
 # KILNOMICS
 
-KILNOMICS is a local dashboard for analysing clinker-to-cement cost, quality,
-energy, and model evidence from an Excel workbook. It runs on your computer;
-the workbook is not uploaded to a cloud service.
+A local clinker-to-cement analysis dashboard that turns an Excel workbook into cost,
+quality, energy and model-evidence views. It separates potential value from validated
+and finance-realised savings.
 
-This guide is written for someone using VS Code and Terminal for the first
-time on a Mac.
+## What the pilot does
 
-## Babe before you start
+- Validate workbook coverage, sheets and usable data.
+- Fit soft sensors and expose sample size, holdout evidence and model release gates.
+- Compare plants using intensive metrics rather than absolute plant scale.
+- Evaluate a constrained TSR scenario against uploaded capability, prices and production.
+- Show portfolio, plant comparisons, scenarios and evidence/finance views.
 
-You need these installed once:
-
-- [VS Code](https://code.visualstudio.com/)
-- Python 3.11 or later
-- Node.js 20 or later
-
-To check Python and Node, open **Terminal** and run these commands one at a
-time:
-
-```bash
-python3 --version
-node --version
+```mermaid
+flowchart LR
+    Workbook[Local XLSX] --> Validate[Data quality]
+    Validate --> Train[Soft-sensor fitting]
+    Train --> Gate[Evidence gates]
+    Gate --> Analysis[Cost and operating analysis]
+    Analysis --> UI[React dashboard]
+    UI --> Scenario[Constrained scenario]
 ```
 
-Each command should print a version number. If either command says `command not found`, install that tool before continuing.
+## Run locally
 
-## Open the project in VS Code
-
-1. Open VS Code.
-2. Click **File** → **Open Folder…**.
-3. Select the `pusu-pusu` folder.
-4. Click **Open**.
-5. In VS Code, click **Terminal** → **New Terminal**.
-
-The panel at the bottom is the integrated terminal. It should show a path that
-ends in `pusu-pusu`. If it does not, paste this command and press Enter:
+Use Python 3.11+ and Node 20+ as documented for the pilot.
 
 ```bash
-cd /Users/danusharun/Downloads/pusu-pusu
-```
-
-
-
-## First-time setup
-
-Run the following commands in the VS Code terminal, one at a time. Wait for a
-command to finish before entering the next one.
-
-```bash
+git clone https://github.com/DanushArun/KILNOMICS.git
+cd KILNOMICS
 python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cd frontend
+npm ci
+cd ..
+.venv/bin/uvicorn backend.app.main:app --reload --port 8000
 ```
 
-```bash
-./.venv/bin/pip install -r requirements.txt
-```
+In another terminal, from the repository root:
 
 ```bash
 cd frontend
-```
-
-```bash
-npm install
-```
-
-```bash
-cd ..
-```
-
-You only need to do this setup once per project folder, unless you delete the
-`.venv` or `frontend/node_modules` folders.
-
-## Start KILNOMICS
-
-KILNOMICS needs **two terminals** open at the same time.
-
-### Terminal 1 — backend
-
-1. In VS Code, click the `+` button in the Terminal panel to open a second
-  terminal if you need one.
-2. In the first terminal, make sure you are in the `pusu-pusu` folder.
-3. Paste this command and press Enter:
-
-```bash
-./.venv/bin/uvicorn backend.app.main:app --reload --port 8000
-```
-
-Wait until you see this exact line:
-
-```text
-Uvicorn running on http://127.0.0.1:8000
-```
-
-Leave this terminal running. It is the part that reads Excel files and trains
-the models.
-
-### Terminal 2 — dashboard
-
-1. Click the `+` button in the Terminal panel to open another terminal.
-2. Paste these commands one at a time:
-
-```bash
-cd /Users/danusharun/Downloads/pusu-pusu/frontend
-```
-
-```bash
 npm run dev
 ```
 
-Wait until you see a line similar to this:
+Open `http://localhost:5173`. The API permits that frontend origin.
+Both servers run locally; this pilot does not use a cloud workbook-analysis service.
 
-```text
-Local: http://localhost:5173/
-```
+## Try the synthetic workbook
 
-Hold `Command` and click the `http://localhost:5173/` link. Your browser opens
-the dashboard.
+Download **Demo workbook** in the UI or use
+[KILNOMICS_Demo_Data.xlsx](demo/KILNOMICS_Demo_Data.xlsx), then upload it.
+The progress rail reflects validation, model fitting and analysis stages.
+Review Portfolio, Compare plants, Scenario and Evidence & finance after completion.
 
-## Run the demo workbook
+Synthetic results demonstrate the software flow. They do not establish actual plant savings,
+operational suitability or a causal relationship between measured variables.
 
-1. In the dashboard, click **Demo workbook** to download the prepared example.
-2. Click **Upload workbook**.
-3. Select `KILNOMICS_Demo_Data.xlsx` from your Downloads folder.
-4. The dashboard shows an in-progress training rail while it validates data,
-  fits soft sensors, and builds the constrained value case. The rail reflects
-  completed backend stages: queued, validation, model fitting, and analysis.
-5. When analysis finishes, **Portfolio** shows the workbook-derived potential
-  value pool, intensive operating position, and highest-value actions.
-6. Open **Compare plants** to review intensive-only SHC gaps. Structural plant
-  differences remain visible and are not presented as savings.
-7. Open **Scenario** to test TSR above the current operating point. The result
-  is bounded by the uploaded kiln capability and calculates ₹/t and annual
-  potential from uploaded fuel prices, heat value, SHC, and production volume.
-8. Open **Evidence & finance** to review model inputs, sample size, holdout
-  performance, release decision, and finance-realised value.
+## API and repository
 
-The demo workbook is synthetic. Its results prove the software flow only; they
-are not a claim about a real cement plant or realised savings.
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/health` | Local pilot health |
+| `GET /api/demo-workbook` | Synthetic example workbook |
+| `POST /api/workbooks/train` | Synchronous workbook analysis |
+| `POST /api/workbooks/train/start` | Start background analysis |
+| `GET /api/workbooks/runs/{run_id}` | Read analysis progress/results |
+| `POST /api/scenarios` | Evaluate scenario against an analysis |
 
-## Use a real workbook
+[backend/app](backend/app) owns chemistry, costs, data quality, training, gates and scenarios.
+[frontend/src](frontend/src) owns the dashboard and insights. [AGENT.md](AGENT.md) is the
+broader founding brief; it includes intended scope beyond this implemented pilot.
 
-Use the same upload process for your `.xlsx` workbook. The backend validates
-the required sheets, usable date coverage, and ranges before it trains models.
+## Verification and limitations
 
-If a workbook is missing expected sheets or cannot be used for training, do not
-make an operational decision from it. Fix the workbook first, then upload it
-again.
-
-## Stop the application
-
-Click the terminal running the backend and press `Control` + `C` once. Then do
-the same in the terminal running the dashboard. This stops the local servers;
-it does not delete your Excel file or project files.
-
-## Start it again
-
-Open the project in VS Code and repeat only the two commands below in separate
-terminals:
+Python behavioral tests are in [tests](tests); frontend checks are declared as:
 
 ```bash
-./.venv/bin/uvicorn backend.app.main:app --reload --port 8000
+cd frontend
+npm test
+npm run build
 ```
 
-```bash
-cd frontend && npm run dev
-```
-
-
-
-## Common issues
-
-
-
-### `address already in use`
-
-An older KILNOMICS server is still running. Find its terminal window and press
-`Control` + `C`, then run the command again.
-
-### `command not found: npm`
-
-Node.js is not installed or VS Code needs to be restarted after installation.
-Install the current long-term support version of Node.js, restart VS Code, and
-run `node --version` to confirm it worked.
-
-### The dashboard says the API is out of date
-
-Stop the backend with `Control` + `C` and restart it using the backend command
-above. Always include `--reload` while developing.
-
-### Upload finishes but no model is eligible
-
-This is an evidence result, not necessarily a software error. Open **Model
-evidence & finance** to inspect model inputs, holdout performance, and failed
-release gates.
-
-### The upload rail does not appear
-
-Restart both the backend and dashboard after pulling an update. The rail is
-shown only while a workbook analysis is active; it disappears once the result
-is ready.
-
-## What the dashboard does not do yet
-
-It does not autonomously control a kiln or present model correlations as causal
-proof. Potential, validated, and finance-realised value are separate states. A
-displayed saving becomes actionable only after a constrained scenario, plant
-review, and finance validation.
+Source, tests and API contracts were reviewed; the suites and workbook flow were not rerun
+for this README update. There is no claim of a new measured pass count.
+Analyses are held in process memory and expire on restart, so re-upload before scenario work.
+The pilot does not control a kiln. A potential saving needs constrained analysis, plant review
+and finance validation before it can be recorded as realised value.
